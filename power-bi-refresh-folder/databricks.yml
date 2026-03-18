@@ -1,0 +1,54 @@
+bundle:
+  name: powerbi-refresh-bundle
+
+targets:
+  dpk:
+    mode: development
+    workspace:
+      host: ${DATABRICKS_HOST}
+
+resources:
+  jobs:
+    powerbi_refresh_job:
+      name: powerbi-refresh-job
+
+      tasks:
+
+        # 🔹 DATASET 1
+        - task_key: refresh_dataset_1
+          spark_python_task:
+            python_file: src/refresh.py
+            parameters:
+              - "workspace_id_1"
+              - "dataset_id_1"
+          libraries:
+            - pypi:
+                package: requests
+
+        # 🔹 DATASET 2
+        - task_key: refresh_dataset_2
+          spark_python_task:
+            python_file: src/refresh.py
+            parameters:
+              - "workspace_id_2"
+              - "dataset_id_2"
+          libraries:
+            - pypi:
+                package: requests
+
+        # 🔹 DATASET 3
+        - task_key: refresh_dataset_3
+          spark_python_task:
+            python_file: src/refresh.py
+            parameters:
+              - "workspace_id_3"
+              - "dataset_id_3"
+          libraries:
+            - pypi:
+                package: requests
+
+      schedule:
+        quartz_cron_expression: "0 */5 * * * ?"
+        timezone_id: "Asia/Kolkata"
+
+      max_concurrent_runs: 1

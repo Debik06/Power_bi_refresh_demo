@@ -1,0 +1,47 @@
+import requests
+import os
+import sys
+
+# Read arguments from task
+workspace_id = sys.argv[1]
+dataset_id = sys.argv[2]
+
+# Secrets (set in Databricks)
+TENANT_ID = os.getenv("TENANT_ID")  # not obatinewn from Azure portal, but from the environment variable set in Databricks secrets
+CLIENT_ID = os.getenv("CLIENT_ID")
+CLIENT_SECRET = os.getenv("CLIENT_SECRET")
+
+# STEP 1: Get Token
+def get_access_token():
+    url = f"https://login.microsoftonline.com/{TENANT_ID}/oauth2/v2.0/token"
+
+    data = {
+        "grant_type": "client_credentials",
+        "client_id": CLIENT_ID,
+        "client_secret": CLIENT_SECRET,
+        "scope": "https://analysis.windows.net/powerbi/api/.default"
+    }
+
+    response = requests.post(url, data=data)
+    return response.json()["access_token"]
+
+# STEP 2: Trigger Refresh
+def trigger_refresh(token, workspace_id, dataset_id):
+    url = f"https://api.powerbi.com/v1.0/myorg/groups/{workspace_id}/datasets/{dataset_id}/refreshes"
+
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
+
+    response = requests.post(url, headers=headers)
+
+    if response.status_code == 202:
+        print(f"SUCCESS: Refresh triggered for {dataset_id}")
+    else:
+        print(f"FAILED: {response.text}")
+
+# MAIN
+if __name__ == "__main__":
+    token = get_access_token()
+    trigger_refresh(token, workspace_id, dataset_id)
